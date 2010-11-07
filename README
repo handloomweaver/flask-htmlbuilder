@@ -1,5 +1,5 @@
-    flaskext.htmlbuilder
-    ~~~~~~~~~~~~~~~~~~~~
+    Flask-HTMLBuilder
+    ~~~~~~~~~~~~~~~~~
 
     Flask-HTMLBuilder is a Flask extension that allows flexible and easy
     Python-only generation of HTML snippets and full HTML documents using a
