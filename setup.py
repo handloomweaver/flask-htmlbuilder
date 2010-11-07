@@ -2,14 +2,17 @@
 Flask-HTMLBuilder
 -----------------
 
-Description goes here...
+Flask-HTMLBuilder is an extension to `Flask`_ that allows flexible Python-only
+generation of HTML snippets and full HTML documents using a flexible syntax.
+For more advanced usage it provides a lean template inheritance system that
+is intertwined with the Flask/Werkzeug endpoint mechanisms.
 
 Links
 `````
 
 * `documentation <http://packages.python.org/Flask-HTMLBuilder>`_
 * `development version
-  <http://github.com/USERNAME/REPOSITORY/zipball/master#egg=Flask-HTMLBuilder-dev>`_
+  <http://github.com/majorz/flask-htmlbuilder/zipball/master#egg=Flask-HTMLBuilder-dev>`_
 
 """
 from setuptools import setup
@@ -17,19 +20,23 @@ from setuptools import setup
 
 setup(
     name='Flask-HTMLBuilder',
-    version='0.1',
-    url='<enter URL here>',
+    version='0.3',
+    url='http://github.com/majorz/flask-htmlbuilder',
     license='MIT',
     author='Zahari Petkov',
-    author_email='your-email-here@example.com',
-    description='<enter short description here>',
+    author_email='zarchaoz@gmail.com',
+    description='Flexible Python-only HTML generation for Flask',
     long_description=__doc__,
     packages=['flaskext'],
     namespace_packages=['flaskext'],
+    test_suite='nose.collector',
     zip_safe=False,
     platforms='any',
     install_requires=[
         'Flask'
+    ],
+    tests_require=[
+        'nose'
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
