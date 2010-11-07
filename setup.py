@@ -11,7 +11,7 @@ mechanisms.
 Links
 `````
 
-* `documentation <http://packages.python.org/Flask-HTMLBuilder>`_
+* `documentation <http://majorz.github.com/flask-htmlbuilder/>`_
 * `development version
   <http://github.com/majorz/flask-htmlbuilder/zipball/master#egg=Flask-HTMLBuilder-dev>`_
 
