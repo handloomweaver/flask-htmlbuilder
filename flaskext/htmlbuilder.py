@@ -154,6 +154,8 @@ def render(element, level=0):
 
 
 class BaseElement(object):
+    __slots__ = []
+    
     def __str__(self):
         return str(self.render(None))
     
@@ -168,15 +170,17 @@ class BaseElement(object):
 
 
 class Element(BaseElement):
+    __slots__ = ['_tag', '_children', '_attributes']
+    
     def __init__(self, tag):
-        self.tag = tag
+        self._tag = tag
         
         # `None` indicates a void element or a list content for non-void
         # elements. 
-        self.children = None
+        self._children = None
         
         # `None` indicates no attributes, or it is a list if there are any.
-        self.attributes = None
+        self._attributes = None
         
     def __call__(self, *children, **attributes):
         # Consequent calling the instances of that class with keyword
@@ -185,23 +189,23 @@ class Element(BaseElement):
         
         if attributes:
             # Keyword arguments are used to indicate attribute definition.
-            self.attributes = attributes
+            self._attributes = attributes
         elif children:
             # Child nodes are passed through the list arguments.
-            self.children = children
+            self._children = children
         else:
             # Create an empty non-void HTML element.
-            self.children = []
+            self._children = []
         
         return self
     
     def __repr__(self):
-        result = '<' + type(self).__name__ + ' ' + self.tag
+        result = '<' + type(self).__name__ + ' ' + self._tag
         
-        if self.attributes is not None:
-            result += _serialize_attributes(self.attributes)
+        if self._attributes is not None:
+            result += _serialize_attributes(self._attributes)
         
-        if self.children:
+        if self._children:
             result += ' ...'
             
         result += '>'
@@ -210,30 +214,30 @@ class Element(BaseElement):
     
     def render(self, level):
         # Keeping this method intentionally long for execution speed gain.
-        result = _indent(level) + '<' + self.tag
+        result = _indent(level) + '<' + self._tag
         
-        if self.attributes is not None:
-            result += _serialize_attributes(self.attributes)
+        if self._attributes is not None:
+            result += _serialize_attributes(self._attributes)
         
-        if self.children is None:
+        if self._children is None:
             result += ' />'
         else:
             result += '>'
-            if self.children:
-                if len(self.children) == 1 and isinstance(self.children[0], basestring):
-                    result += escape(self.children[0])
+            if self._children:
+                if len(self._children) == 1 and isinstance(self._children[0], basestring):
+                    result += escape(self._children[0])
                 else:
                     result += _new_line(level)
                     
                     if level is not None:
                         level += 1
-                    result += _render_iteratable(self.children, level)
+                    result += _render_iteratable(self._children, level)
                     if level is not None:
                         level -= 1
                     
                     result += _indent(level)
             
-            result += '</' + self.tag + '>'
+            result += '</' + self._tag + '>'
         
         result += _new_line(level)
         return result
@@ -252,6 +256,8 @@ class Comment(BaseElement):
         <link media="handheld" href="css/handheld.css" rel="stylesheet" />
         
     """
+    __slots__ = ['_comment']
+    
     def __init__(self):
         self._comment = None
     
@@ -285,6 +291,8 @@ class Doctype(BaseElement):
         </html>
         
     """
+    __slots__ = ['_doctype']
+    
     def __init__(self):
         self._doctype = None
 
@@ -311,6 +319,8 @@ class Safe(BaseElement):
         </div>
 
     """
+    __slots__ = ['_content']
+    
     def __init__(self):
         self._content = None
     
@@ -340,15 +350,17 @@ class Join(BaseElement):
         </p>
         
     """
+    __slots__ = ['_children']
+    
     def __init__(self):
-        self.children = None
+        self._children = None
     
     def __call__(self, *children):
-        self.children = children
+        self._children = children
         return self
     
     def render(self, level):
-        return _indent(level) + _render_iteratable(self.children, None) + \
+        return _indent(level) + _render_iteratable(self._children, None) + \
                _new_line(level)
 
 
@@ -367,6 +379,8 @@ class NewLine(BaseElement):
     
         
     """
+    __slots__ = []
+    
     def render(self, level):
         return _indent(level) + _new_line(level)
         
@@ -525,6 +539,7 @@ class Block(object):
     :func:`block` decorator, but as an alternative approach that is described
     in the documentation of :class:`RootBlock`.
     """
+    __slots__ = ['endpoint', 'block_func', 'contexts']
     
     block_mapping = {}
     
@@ -645,6 +660,8 @@ class Context(object):
     `context_name` parameter of the :func:`block` decorator. Check the
     documentation of :class:`RootBlock` for more information.
     """
+    __slots__ = ['name', 'blocks']
+    
     def __init__(self, name):
         self.name = name
         self.blocks = []
