@@ -1,6 +1,6 @@
-from flask import Flask, g
+from nose.tools import raises
 
-from jinja2 import Markup
+from flask import Flask, g, Markup
 
 from flaskext.htmlbuilder import html, render, render_template, root_block, \
      block, Block, RootBlock, Context, init_htmlbuilder
@@ -154,17 +154,28 @@ def test_safe():
     assert rn(html.p(html.safe('<strong>&nbsp;Text&nbsp;</strong>'))) == '<p><strong>&nbsp;Text&nbsp;</strong></p>'
     assert render(html.p(html.safe('<strong>&nbsp;Text&nbsp;</strong>'))) == '<p>\n  <strong>&nbsp;Text&nbsp;</strong>\n</p>\n'
 
-    
+
 def test_newline():
     assert render([html.p('First'), html.newline(), html.p('Second')]) == '<p>First</p>\n\n<p>Second</p>\n'
     assert render(html.div(html.p('First'), html.newline(), html.p('Second'))) == \
            '<div>\n  <p>First</p>\n  \n  <p>Second</p>\n</div>\n'
     assert rn([html.p('First'), html.newline(), html.p('Second')]) == '<p>First</p><p>Second</p>'
 
+
 def test_render_level():
     assert render(html.p(html.a('Text')), level=1) == '  <p>\n    <a>Text</a>\n  </p>\n'
     assert render(html.p(html.a('Text')), level=2) == '    <p>\n      <a>Text</a>\n    </p>\n'
-    
+
+
+@raises(AttributeError)
+def test_escape_attribute_numbers():
+    render(html.a(x=5))
+
+
+@raises(TypeError)
+def test_escape_numbers():
+    render(html.a(5))
+
     
 def test_root_block_decorator():
     app = Flask(__name__)
@@ -468,3 +479,9 @@ def test_markup():
     assert Markup(html.p(html.comment('Comment'))) == '<p><!--Comment--></p>'
     assert Markup(html.p(html.safe('<strong>&nbsp;Text&nbsp;</strong>'))) == '<p><strong>&nbsp;Text&nbsp;</strong></p>'
     assert Markup(html.safe('<strong>&nbsp;Text&nbsp;</strong>')) == '<strong>&nbsp;Text&nbsp;</strong>'
+    
+    assert rn(html.p(Markup('<strong>&nbsp;Text&nbsp;</strong>'))) == '<p><strong>&nbsp;Text&nbsp;</strong></p>'
+    assert rn(html.p(Markup('&nbsp; '), Markup('<strong>One</strong>'))) == '<p>&nbsp; <strong>One</strong></p>'
+    assert render(html.p(Markup('&nbsp; '), Markup('<strong>One</strong>'))) == u'<p>\n  &nbsp; \n  <strong>One</strong>\n</p>\n'
+
+

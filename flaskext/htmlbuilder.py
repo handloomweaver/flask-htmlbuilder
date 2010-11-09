@@ -16,8 +16,6 @@ from __future__ import absolute_import
 
 from keyword import kwlist
 
-from werkzeug.utils import escape
-
 from flask import request, g
 
 
@@ -149,8 +147,10 @@ def render(element, level=0):
         return _render_iteratable(element, level)
     elif isinstance(element, basestring):
         return _render_string(element, level)
+    elif element is None:
+        return ''
     
-    return ''
+    raise TypeError('Cannot render %r' % element)
 
 
 class BaseElement(object):
@@ -440,6 +440,20 @@ def _unmangle_colon(name):
     be used as a variable character symbol in Python.
     """
     return name.replace('__', ':')
+
+
+def escape(string, quote=False):
+    """Standard HTML text escaping, but protecting against the agressive
+    behavior of Jinja 2 `Markup` and the like.
+    """
+    if string is None:
+        return ''
+    elif hasattr(string, '__html__'):
+        return unicode(string)
+    string = string.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+    if quote:
+        string = string.replace('"', "&quot;")
+    return string
 
 
 DEFAULT_TEMPLATE_NAME = 'default'
