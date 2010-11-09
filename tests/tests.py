@@ -1,5 +1,7 @@
 from flask import Flask, g
 
+from jinja2 import Markup
+
 from flaskext.htmlbuilder import html, render, render_template, root_block, \
      block, Block, RootBlock, Context, init_htmlbuilder
 
@@ -460,3 +462,9 @@ def test_alternative_definition():
   </body>
 </html>
 """
+
+def test_markup():
+    assert Markup(html.a(name='value')(html.b(first='one'), 'Text', html.c())) == '<a name="value"><b first="one" />Text<c></c></a>'
+    assert Markup(html.p(html.comment('Comment'))) == '<p><!--Comment--></p>'
+    assert Markup(html.p(html.safe('<strong>&nbsp;Text&nbsp;</strong>'))) == '<p><strong>&nbsp;Text&nbsp;</strong></p>'
+    assert Markup(html.safe('<strong>&nbsp;Text&nbsp;</strong>')) == '<strong>&nbsp;Text&nbsp;</strong>'

@@ -153,7 +153,21 @@ def render(element, level=0):
     return ''
 
 
-class Element(object):
+class BaseElement(object):
+    def __str__(self):
+        return str(self.render(None))
+    
+    def __unicode__(self):
+        return unicode(self.render(None))
+    
+    def __html__(self):
+        return self.__unicode__()
+    
+    def render(self, level):
+        raise NotImplementedError('render() method has not been implemented')
+
+
+class Element(BaseElement):
     def __init__(self, tag):
         self.tag = tag
         
@@ -194,12 +208,6 @@ class Element(object):
         
         return result
     
-    def __str__(self):
-        return str(self.render(None))
-    
-    def __unicode__(self):
-        return unicode(self.render(None))
-    
     def render(self, level):
         # Keeping this method intentionally long for execution speed gain.
         result = _indent(level) + '<' + self.tag
@@ -231,7 +239,7 @@ class Element(object):
         return result
 
 
-class Comment(object):
+class Comment(BaseElement):
     """`html.comment` is used for rendering HTML comments.
     Example::
         
@@ -259,7 +267,7 @@ class Comment(object):
         return result
 
 
-class Doctype(object):
+class Doctype(BaseElement):
     """`html.doctype` is used for rendering HTML doctype definition at the
     beginning of the HTML document.  Example::
         
@@ -289,7 +297,7 @@ class Doctype(object):
                _new_line(level)
 
 
-class Safe(object):
+class Safe(BaseElement):
     """`html.safe` renders HTML text content without escaping it. This is
     useful for insertion of prerendered HTML content.  Example::
         
@@ -314,7 +322,7 @@ class Safe(object):
         return _indent(level) + self._content + _new_line(level)
 
 
-class Join(object):
+class Join(BaseElement):
     """`html.join` is used for rendering a list of HTML builder elements
     without indenting them and transferring each of them to a new line.  This
     is necessary when rendering a paragraph content for example and all text
@@ -344,7 +352,7 @@ class Join(object):
                _new_line(level)
 
 
-class NewLine(object):
+class NewLine(BaseElement):
     """`html.newline` adds an empty new line in the content.  This is only
     needed for better readibility of the HTML source code.  Example::
     
@@ -446,7 +454,7 @@ def render_template(template_name=DEFAULT_TEMPLATE_NAME):
     :param template_name: The name of the block template hierarchy that is used
                           to render the HTML document.
     """
-    return RootBlock.block_templates[template_name].render()
+    return render(RootBlock.block_templates[template_name].html_block())
 
 
 def root_block(template_name=DEFAULT_TEMPLATE_NAME):
@@ -530,15 +538,12 @@ class Block(object):
         result += '>'
         return result
         
-    def get_html(self):
+    def html_block(self):
         if self.contexts is not None:
             for html_context in self.contexts:
                 html_context.attach()
         
         return self.block_func()
-    
-    def render(self):
-        return render(self.get_html())
     
     def append_context_block(self, name, block):
         context = self._find_context(name)
@@ -639,12 +644,12 @@ class Context(object):
         
     def attach(self):
         endpoint = request.url_rule.endpoint
-        block = self.get_block(endpoint)
+        block = self._get_block(endpoint)
         
         if block is not None:
-            g.blocks[self.name] = block.get_html()
+            g.blocks[self.name] = block.html_block()
         
-    def get_block(self, endpoint):
+    def _get_block(self, endpoint):
         exact_block = self._find_block(endpoint)
         if exact_block is not None:
             return exact_block
