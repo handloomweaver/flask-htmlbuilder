@@ -3,7 +3,7 @@ from nose.tools import raises
 from flask import Flask, g, Markup
 
 from flaskext.htmlbuilder import html, render, render_template, root_block, \
-     block, Block, RootBlock, Context, init_htmlbuilder
+     block, Block, RootBlock, Context, init_htmlbuilder, Attr
 
 
 def rn(element):
@@ -23,6 +23,11 @@ def test_unicode_attribute_values():
     assert rn(html.a(chars=u'\u03a0\u03a3\u03a9')) == u'<a chars="\u03a0\u03a3\u03a9" />'
 
 
+def test_none_attribute_values():
+    assert rn(html.a(id=None)) == u'<a />'
+    assert rn(html.a(a=None, b='b', c=None)) == u'<a b="b" />'
+
+
 def test_attribute_value_escaping():
     assert rn(html.a(chars='<"&>')) == '<a chars="&lt;&quot;&amp;&gt;" />'
 
@@ -34,7 +39,9 @@ def test_colon_unmangling():
 def test_python_keyword_unmangling():
     assert rn(html.a(class_='value')) == '<a class="value" />'
     assert rn(html.a(else_='value')) == '<a else="value" />'
-    assert rn(html.a(id_='value')) == '<a id_="value" />'
+    assert rn(html.a(id_='value')) == '<a id-="value" />'
+
+    assert rn(html.del_('Text')) == '<del>Text</del>'
 
 
 def test_void_elements():
@@ -484,4 +491,92 @@ def test_markup():
     assert rn(html.p(Markup('&nbsp; '), Markup('<strong>One</strong>'))) == '<p>&nbsp; <strong>One</strong></p>'
     assert render(html.p(Markup('&nbsp; '), Markup('<strong>One</strong>'))) == u'<p>\n  &nbsp; \n  <strong>One</strong>\n</p>\n'
 
+
+def test_html_block_has_block():
+    app = Flask(__name__)
+    init_htmlbuilder(app)
+    
+    @app.route('/a')
+    def view_a():
+        html.block('container')(
+            html.div('Container content.')
+        )
+        return render_template()
+    
+    @root_block()
+    def site_root():
+        return [
+            html.doctype('html'),
+            html.html(
+                html.head(),
+                html.body(
+                    g.blocks['body']
+                )
+            )
+        ]
+    
+    @block('body', site_root)
+    def site_body():
+        return html.has_block('container')(
+            html.div(class_='container')(
+                html.block('container'),
+                html.block('undefined'),
+                html.has_block('noblock')(
+                    html.p()
+                )
+            )
+        )
+    
+    client = app.test_client()
+    result = client.get('/a')
+    
+    assert result.data == """<!doctype html>
+<html>
+  <head></head>
+  <body>
+    <div class="container">
+      <div>Container content.</div>
+    </div>
+  </body>
+</html>
+"""
+
+
+def test_attr_has_attr():
+    app = Flask(__name__)
+    init_htmlbuilder(app)
+    
+    @app.route('/a')
+    def view_a():
+        g.attrs['description'] = 'A description'
+        return render_template()
+    
+    @root_block()
+    def site_root():
+        return [
+            html.doctype('html'),
+            html.html(
+                html.head(
+                    html.has_attr('description')(
+                        html.meta(content=Attr('description'))
+                    ),
+                    html.has_attr('author')(
+                        html.meta(content=Attr('author'))
+                    )
+                ),
+                html.body()
+            )
+        ]
+    
+    client = app.test_client()
+    result = client.get('/a')
+    
+    assert result.data == """<!doctype html>
+<html>
+  <head>
+    <meta content="A description" />
+  </head>
+  <body></body>
+</html>
+"""
 

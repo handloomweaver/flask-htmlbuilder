@@ -21,17 +21,18 @@ from flask import request, g
 
 __all__ = [
     'init_htmlbuilder', 'html', 'render', 'render_template', 'root_block',
-    'block', 'RootBlock', 'Block', 'Context'
+    'block', 'RootBlock', 'Block', 'Context', 'Attrs'
 ]
 
 
 def init_htmlbuilder(app):
-    """Initializes the extension so that the `g.blocks` dictionary is created
-    for each request.
+    """Initializes the extension so that the `g.blocks` and `g.attrs`
+    dictionaries are created for each request.
     """
     @app.before_request
     def before_request():
         g.blocks = {}
+        g.attrs = {}
 
 
 class HTMLDispatcher(object):
@@ -76,7 +77,9 @@ Void element with attributes::
 
 .. note::
     Since attribute names like `class` are reserved Python keywords those need
-    to be escaped with an underscore "_" symbol at the end of the name.
+    to be escaped with an underscore "_" symbol at the end of the name.  The
+    same holds true for HTML elements like `del`, which needs to be declared as
+    `html.del_`.
 
 Non-void element::
 
@@ -99,20 +102,6 @@ Element with attributes and children::
     because Python does not allow keyword arguments (the attributes in this
     case) to be placed before the list arguments (child elements).  `__call__`
     chaining allows the definition syntax to be closer to HTML.
-
-The :data:`flaskext.htmlbuilder.html` instance has some special methods that
-are internally dispatched to the following classes:
-
-.. autoclass:: Doctype
-
-.. autoclass:: Comment
-
-.. autoclass:: Safe
-
-.. autoclass:: Join
-
-.. autoclass:: NewLine
-
 """
 
 def render(element, level=0):
@@ -170,10 +159,10 @@ class BaseElement(object):
 
 
 class Element(BaseElement):
-    __slots__ = ['_tag', '_children', '_attributes']
+    __slots__ = ['_name', '_children', '_attributes']
     
-    def __init__(self, tag):
-        self._tag = tag
+    def __init__(self, name):
+        self._name = _unmangle_element_name(name)
         
         # `None` indicates a void element or a list content for non-void
         # elements. 
@@ -200,7 +189,7 @@ class Element(BaseElement):
         return self
     
     def __repr__(self):
-        result = '<' + type(self).__name__ + ' ' + self._tag
+        result = '<' + type(self).__name__ + ' ' + self._name
         
         if self._attributes is not None:
             result += _serialize_attributes(self._attributes)
@@ -214,7 +203,7 @@ class Element(BaseElement):
     
     def render(self, level):
         # Keeping this method intentionally long for execution speed gain.
-        result = _indent(level) + '<' + self._tag
+        result = _indent(level) + '<' + self._name
         
         if self._attributes is not None:
             result += _serialize_attributes(self._attributes)
@@ -224,7 +213,7 @@ class Element(BaseElement):
         else:
             result += '>'
             if self._children:
-                if len(self._children) == 1 and isinstance(self._children[0], basestring):
+                if len(self._children) == 1 and isinstance(self._children[0], basestring) or self._children[0] is None:
                     result += escape(self._children[0])
                 else:
                     result += _new_line(level)
@@ -237,7 +226,7 @@ class Element(BaseElement):
                     
                     result += _indent(level)
             
-            result += '</' + self._tag + '>'
+            result += '</' + self._name + '>'
         
         result += _new_line(level)
         return result
@@ -348,7 +337,6 @@ class Join(BaseElement):
         <p>
           Read the <a href="/docs">documentation</a>.
         </p>
-        
     """
     __slots__ = ['_children']
     
@@ -376,16 +364,138 @@ class NewLine(BaseElement):
         <p>First</p>
         
         <p>Second</p>
-    
-        
     """
     __slots__ = []
-    
-    def render(self, level):
-        return _indent(level) + _new_line(level)
         
     def __call__(self):
         return self
+    
+    def render(self, level):
+        return _indent(level) + _new_line(level)
+
+
+class BaseHasElement(BaseElement):
+    __slots__ = ['_children', '_name']
+    
+    def __init__(self):
+        self._children = None
+        
+        self._name = None
+    
+    def __call__(self, *arguments):
+        if self._name is None:
+            self._name = arguments[0]
+        else:
+            self._children = arguments
+        return self
+
+
+class HasBlock(BaseHasElement):
+    """`html.has_block` checks whether a specified HTML block exists in the
+    `g.blocks` dictionary and if so then it returns specified child elements.
+    
+    The following function::
+    
+        def container_main():
+            if g.blocks.has_key('main_content'):
+                return html.div(id='container_main')(
+                    html.block('main_content')
+                )
+            else:
+                return None
+    
+    Is equivalent to the following::
+        
+        def container_main():
+            return html.has_block('main_content')(
+                html.div(id='container_main')(
+                    html.block('main_content')
+                )
+            )
+    
+    """
+    def render(self, level):
+        if g.blocks.has_key(self._name):
+            return _render_iteratable(self._children, level)
+        else:
+            return ''
+
+
+class BlockElement(BaseElement):
+    """`html.block` is used for retreiving already populated blocks from the
+    `g.blocks` dictionary.  It is a shortcut method for `g.blocks.get` with
+    the small difference that it returns a block element on it's own like the
+    other `html` instance methods.  Additionally it has the ability to set
+    block content.
+    
+    The following call::
+    
+        >>> html.p(
+        ...     g.blocks.get('content')
+        ... )
+    
+    Is equivalent to the following::
+
+        >>> html.p(
+        ...     html.block('content')
+        ... )
+    
+    Setting block content is used that way::
+    
+        >>> html.block('content')(
+        ...     html.join(
+        ...         'Hello, ', html.a(href='/world')('World'), '!'
+        ...     )
+        ... )
+    
+    Which is equivalent to the following::
+    
+        >>> g.blocks['content'] = html.join(
+        ...     'Hello, ', html.a(href='/world')('World'), '!'
+        ... )
+    """
+    __slots__ = ['_name']
+    
+    def __init__(self):
+        self._name = None
+    
+    def __call__(self, *arguments):
+        if self._name is None:
+            self._name = arguments[0]
+        else:
+            g.blocks[self._name] = arguments
+        return self
+    
+    def render(self, level):
+        return render(g.blocks.get(self._name, None), level)
+
+
+class HasAttr(BaseHasElement):
+    """`html.has_attr` checks whether a given key exists in the
+    `g.attrs` dictionary and if so then it returns specified child elements.
+    
+    The following function::
+        
+        def meta_description():
+            if g.attrs.has_key('description'):
+                return html.meta(name='description', content=g.attrs['description'])
+            else:
+                return None
+    
+    Is equivalent to the following::
+    
+        def meta_description():
+            return html.has_attr('description)(
+                html.meta(name='description', content=Attr('description'))
+            )
+    
+    It is used usually in conjunction with :class:`Attr`.
+    """
+    def render(self, level):
+        if g.attrs.has_key(self._name):
+            return _render_iteratable(self._children, level)
+        else:
+            return ''
 
 
 special_elements = {
@@ -394,6 +504,9 @@ special_elements = {
     'safe': Safe,
     'join': Join,
     'newline': NewLine,
+    'has_block': HasBlock,
+    'block': BlockElement,
+    'has_attr': HasAttr,
 }
 
 
@@ -426,34 +539,38 @@ def _serialize_attributes(attributes):
     """Serializes HTML element attributes in a name="value" pair form."""
     result = ''
     for name, value in attributes.iteritems():
-        result += ' ' + _unmangle_name(name) + '="' + escape(value, True) + '"'
+        if value is None or (hasattr(value, 'is_none') and value.is_none()):
+            continue
+        result += ' ' + _unmangle_attribute_name(name) + '="' \
+               + escape(value, True) + '"'
     return result
-
-
-def _unmangle_name(name):
-    """Unmangles attribute names so that correct Python variable names are
-    used for mapping attribute names."""
-    name = _unmangle_colon(name)
-    name = _unmangle_keyword(name)
-    return name
 
 
 _PYTHON_KEYWORD_MAP = dict((reserved + '_', reserved) for reserved in kwlist)
 
-
-def _unmangle_keyword(name):
-    """Python keywords cannot be used as a variable names, an underscore should
-    be appended at the end of each of them when defining attribute names.  This
-    function unmangles the underscores.
-    """
+def _unmangle_element_name(name):
+    """Unmangles element names so that correct Python method names are
+    used for mapping element names."""
+    
+    # Python keywords cannot be used as method names, an underscore should
+    # be appended at the end of each of them when defining attribute names.
     return _PYTHON_KEYWORD_MAP.get(name, name)
 
 
-def _unmangle_colon(name):
-    """Attribute names are mangled with double underline, as colon cannot
-    be used as a variable character symbol in Python.
-    """
-    return name.replace('__', ':')
+def _unmangle_attribute_name(name):
+    """Unmangles attribute names so that correct Python variable names are
+    used for mapping attribute names."""
+    
+    # Python keywords cannot be used as variable names, an underscore should
+    # be appended at the end of each of them when defining attribute names.
+    name = _PYTHON_KEYWORD_MAP.get(name, name)
+    
+    # Attribute names are mangled with double underscore, as colon cannot
+    # be used as a variable character symbol in Python. Single underscore is
+    # used for substituting dash.
+    name = name.replace('__', ':').replace('_', '-')
+    
+    return name
 
 
 def escape(string, quote=False):
@@ -610,7 +727,7 @@ class RootBlock(Block):
         @root_block('sidebar')
         def sidebar_base():
             return html.div(id='sidebar')(
-                g.blocks.get('sidebar_content', None)
+                html.block('sidebar_content')
             )
         
         @block('sidebar_content', sidebar_base, sidebar_first_view)
@@ -626,7 +743,7 @@ class RootBlock(Block):
         
         def sidebar_base():
             return html.div(id='sidebar')(
-                g.blocks.get('sidebar_content', None)
+                html.block('sidebar_content')
             )
         
         def sidebar_first_content():
@@ -693,4 +810,41 @@ class Context(object):
                 return block
         return None
 
+
+class Attr(object):
+    """A shortcut class for accessing the `g.attrs` dictionary for populating
+    HTML element attributes with data.
+    
+    The following two calls are equivalent::
+        
+        html.meta(name='description', content=Attr('description'))
+        
+        html.meta(name='description', content=g.attrs['description'])
+    """
+    __slots__ = ['_name']
+    
+    def __init__(self, name):
+        self._name = name
+    
+    def __str__(self):
+        return self._to_string(str)
+    
+    def __unicode__(self):
+        return self._to_string(unicode)
+    
+    def replace(self, old, new):
+        g.attrs[self._name].replace(old, new)
+        return self
+    
+    def __add__(self, other):
+        return unicode(self) + other
+    
+    def __radd__(self, other):
+        return other + unicode(self)
+    
+    def _to_string(self, string_class):
+        return string_class(g.attrs[self._name])
+    
+    def is_none(self):
+        return g.attrs[self._name] is None
 

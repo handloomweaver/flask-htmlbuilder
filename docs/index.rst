@@ -83,13 +83,19 @@ decorators for creating the template block hierarchy::
     app = Flask(__name__)
     init_htmlbuilder(app)
 
-The :func:`flaskext.htmlbuilder.init_htmlbuilder` function creates a `g.blocks`
-variable that is a dictionary instance for each request.  It is populated with
-different HTML blocks that are created using the
-:data:`flaskext.htmlbuilder.html` instance during the template HTML block
-assembling process.  The template rendering process is divided into two parts
--- HTML block assembling and rendering the resulting tree structure to indented
-HTML code.  Let's continue the example::
+The :func:`flaskext.htmlbuilder.init_htmlbuilder` function creates for each
+request the `g.blocks` and `g.attrs` variables, which are dictionary instances.
+The `g.blocks` dictionary is populated with different HTML blocks that are
+created using the :data:`flaskext.htmlbuilder.html` instance during the
+template HTML block assembling process.  The `g.attrs` dictionary is used for
+populating the attributes of different HTML elements with data passed from the
+view functions, e.g. the description of a document defined as a `meta` element.
+
+The template rendering process is divided into two parts -- HTML block
+assembling and rendering the resulting tree structure to indented
+HTML code.
+
+Let's continue the example::
     
     @app.route('/logo')
     def logo():
@@ -118,7 +124,7 @@ HTML text.
                     )
                 ),
                 html.body(
-                    g.blocks.get('body', None)
+                    g.blocks.get('body')
                 )
             )
         ]
@@ -156,8 +162,7 @@ block definition below::
                     'Jinja 2 and good intentions. And before you ask: It\'s ',
                     html.a(href='http://flask.pocoo.org/doc/license/')(
                         'BSD licensed'
-                    ),
-                    '!'
+                    ), '!'
                 )
             )
         )
@@ -218,6 +223,33 @@ HTML Generation
 
 .. autodata:: flaskext.htmlbuilder.html
 
+The :data:`flaskext.htmlbuilder.html` instance has some special methods that
+are internally dispatched to the following classes:
+
+
+General
+'''''''
+
+.. autoclass:: Doctype
+
+.. autoclass:: Comment
+
+.. autoclass:: Safe
+
+.. autoclass:: Join
+
+.. autoclass:: NewLine
+
+
+Template Inheritance Related
+''''''''''''''''''''''''''''
+
+.. autoclass:: HasBlock
+
+.. autoclass:: BlockElement
+
+.. autoclass:: HasAttr
+
 
 Rendering
 `````````
@@ -239,6 +271,8 @@ Template Inheritance
 .. autoclass:: flaskext.htmlbuilder.Block
 
 .. autoclass:: flaskext.htmlbuilder.Context
+
+.. autoclass:: flaskext.htmlbuilder.Attr
 
 
 .. _Flask: http://flask.pocoo.org/
