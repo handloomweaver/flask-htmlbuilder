@@ -6,13 +6,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Flask-HTMLBuilder &mdash; Flask-HTMLBuilder v0.3 documentation</title>
+    <title>Flask-HTMLBuilder &mdash; Flask-HTMLBuilder v0.4 documentation</title>
     <link rel="stylesheet" href="static/flasky.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.3',
+        VERSION:     '0.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -21,7 +21,7 @@
     <script type="text/javascript" src="static/jquery.js"></script>
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <link rel="top" title="Flask-HTMLBuilder v0.3 documentation" href="#" /> 
+    <link rel="top" title="Flask-HTMLBuilder v0.4 documentation" href="#" /> 
   </head>
   <body>
   
@@ -105,13 +105,17 @@ decorators for creating the template block hierarchy:</p>
 <span class="n">init_htmlbuilder</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The <a class="reference internal" href="#flaskext.htmlbuilder.init_htmlbuilder" title="flaskext.htmlbuilder.init_htmlbuilder"><tt class="xref py py-func docutils literal"><span class="pre">flaskext.htmlbuilder.init_htmlbuilder()</span></tt></a> function creates a <cite>g.blocks</cite>
-variable that is a dictionary instance for each request.  It is populated with
-different HTML blocks that are created using the
-<a class="reference internal" href="#flaskext.htmlbuilder.html" title="flaskext.htmlbuilder.html"><tt class="xref py py-data docutils literal"><span class="pre">flaskext.htmlbuilder.html</span></tt></a> instance during the template HTML block
-assembling process.  The template rendering process is divided into two parts
-&#8211; HTML block assembling and rendering the resulting tree structure to indented
-HTML code.  Let&#8217;s continue the example:</p>
+<p>The <a class="reference internal" href="#flaskext.htmlbuilder.init_htmlbuilder" title="flaskext.htmlbuilder.init_htmlbuilder"><tt class="xref py py-func docutils literal"><span class="pre">flaskext.htmlbuilder.init_htmlbuilder()</span></tt></a> function creates for each
+request the <cite>g.blocks</cite> and <cite>g.attrs</cite> variables, which are dictionary instances.
+The <cite>g.blocks</cite> dictionary is populated with different HTML blocks that are
+created using the <a class="reference internal" href="#flaskext.htmlbuilder.html" title="flaskext.htmlbuilder.html"><tt class="xref py py-data docutils literal"><span class="pre">flaskext.htmlbuilder.html</span></tt></a> instance during the
+template HTML block assembling process.  The <cite>g.attrs</cite> dictionary is used for
+populating the attributes of different HTML elements with data passed from the
+view functions, e.g. the description of a document defined as a <cite>meta</cite> element.</p>
+<p>The template rendering process is divided into two parts &#8211; HTML block
+assembling and rendering the resulting tree structure to indented
+HTML code.</p>
+<p>Let&#8217;s continue the example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/logo&#39;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">logo</span><span class="p">():</span>
     <span class="n">g</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="s">&#39;title&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;Flask Logo&#39;</span>
@@ -137,7 +141,7 @@ HTML text.</p>
                 <span class="p">)</span>
             <span class="p">),</span>
             <span class="n">html</span><span class="o">.</span><span class="n">body</span><span class="p">(</span>
-                <span class="n">g</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+                <span class="n">g</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="p">)</span>
     <span class="p">]</span>
@@ -173,8 +177,7 @@ block definition below:</p>
                 <span class="s">&#39;Jinja 2 and good intentions. And before you ask: It</span><span class="se">\&#39;</span><span class="s">s &#39;</span><span class="p">,</span>
                 <span class="n">html</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="n">href</span><span class="o">=</span><span class="s">&#39;http://flask.pocoo.org/doc/license/&#39;</span><span class="p">)(</span>
                     <span class="s">&#39;BSD licensed&#39;</span>
-                <span class="p">),</span>
-                <span class="s">&#39;!&#39;</span>
+                <span class="p">),</span> <span class="s">&#39;!&#39;</span>
             <span class="p">)</span>
         <span class="p">)</span>
     <span class="p">)</span>
@@ -221,8 +224,8 @@ API reference section.</p>
 <dl class="function">
 <dt id="flaskext.htmlbuilder.init_htmlbuilder">
 <tt class="descclassname">flaskext.htmlbuilder.</tt><tt class="descname">init_htmlbuilder</tt><big>(</big><em>app</em><big>)</big><a class="headerlink" href="#flaskext.htmlbuilder.init_htmlbuilder" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initializes the extension so that the <cite>g.blocks</cite> dictionary is created
-for each request.</p>
+<dd><p>Initializes the extension so that the <cite>g.blocks</cite> and <cite>g.attrs</cite>
+dictionaries are created for each request.</p>
 </dd></dl>
 
 </div>
@@ -264,7 +267,9 @@ the <a class="reference internal" href="#flaskext.htmlbuilder.html" title="flask
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Since attribute names like <cite>class</cite> are reserved Python keywords those need
-to be escaped with an underscore &#8220;_&#8221; symbol at the end of the name.</p>
+to be escaped with an underscore &#8220;_&#8221; symbol at the end of the name.  The
+same holds true for HTML elements like <cite>del</cite>, which needs to be declared as
+<cite>html.del_</cite>.</p>
 </div>
 <p>Non-void element:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">html</span><span class="o">.</span><span class="n">div</span><span class="p">())</span>
@@ -289,8 +294,12 @@ because Python does not allow keyword arguments (the attributes in this
 case) to be placed before the list arguments (child elements).  <cite>__call__</cite>
 chaining allows the definition syntax to be closer to HTML.</p>
 </div>
+</dd></dl>
+
 <p>The <a class="reference internal" href="#flaskext.htmlbuilder.html" title="flaskext.htmlbuilder.html"><tt class="xref py py-data docutils literal"><span class="pre">flaskext.htmlbuilder.html</span></tt></a> instance has some special methods that
 are internally dispatched to the following classes:</p>
+<div class="section" id="general">
+<h4>General<a class="headerlink" href="#general" title="Permalink to this headline">¶</a></h4>
 <dl class="class">
 <dt id="flaskext.htmlbuilder.Doctype">
 <em class="property">class </em><tt class="descclassname">flaskext.htmlbuilder.</tt><tt class="descname">Doctype</tt><a class="headerlink" href="#flaskext.htmlbuilder.Doctype" title="Permalink to this definition">¶</a></dt>
@@ -383,8 +392,94 @@ needed for better readibility of the HTML source code.  Example:</p>
 </div>
 </dd></dl>
 
+</div>
+<div class="section" id="template-inheritance-related">
+<h4>Template Inheritance Related<a class="headerlink" href="#template-inheritance-related" title="Permalink to this headline">¶</a></h4>
+<dl class="class">
+<dt id="flaskext.htmlbuilder.HasBlock">
+<em class="property">class </em><tt class="descclassname">flaskext.htmlbuilder.</tt><tt class="descname">HasBlock</tt><a class="headerlink" href="#flaskext.htmlbuilder.HasBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>html.has_block</cite> checks whether a specified HTML block exists in the
+<cite>g.blocks</cite> dictionary and if so then it returns specified child elements.</p>
+<p>The following function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">container_main</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;main_content&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">html</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s">&#39;container_main&#39;</span><span class="p">)(</span>
+            <span class="n">html</span><span class="o">.</span><span class="n">block</span><span class="p">(</span><span class="s">&#39;main_content&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</pre></div>
+</div>
+<p>Is equivalent to the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">container_main</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">html</span><span class="o">.</span><span class="n">has_block</span><span class="p">(</span><span class="s">&#39;main_content&#39;</span><span class="p">)(</span>
+        <span class="n">html</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s">&#39;container_main&#39;</span><span class="p">)(</span>
+            <span class="n">html</span><span class="o">.</span><span class="n">block</span><span class="p">(</span><span class="s">&#39;main_content&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
+<dl class="class">
+<dt id="flaskext.htmlbuilder.BlockElement">
+<em class="property">class </em><tt class="descclassname">flaskext.htmlbuilder.</tt><tt class="descname">BlockElement</tt><a class="headerlink" href="#flaskext.htmlbuilder.BlockElement" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>html.block</cite> is used for retreiving already populated blocks from the
+<cite>g.blocks</cite> dictionary.  It is a shortcut method for <cite>g.blocks.get</cite> with
+the small difference that it returns a block element on it&#8217;s own like the
+other <cite>html</cite> instance methods.  Additionally it has the ability to set
+block content.</p>
+<p>The following call:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">html</span><span class="o">.</span><span class="n">p</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">g</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;content&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Is equivalent to the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">html</span><span class="o">.</span><span class="n">p</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">html</span><span class="o">.</span><span class="n">block</span><span class="p">(</span><span class="s">&#39;content&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Setting block content is used that way:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">html</span><span class="o">.</span><span class="n">block</span><span class="p">(</span><span class="s">&#39;content&#39;</span><span class="p">)(</span>
+<span class="gp">... </span>    <span class="n">html</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+<span class="gp">... </span>        <span class="s">&#39;Hello, &#39;</span><span class="p">,</span> <span class="n">html</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="n">href</span><span class="o">=</span><span class="s">&#39;/world&#39;</span><span class="p">)(</span><span class="s">&#39;World&#39;</span><span class="p">),</span> <span class="s">&#39;!&#39;</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Which is equivalent to the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="s">&#39;content&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">html</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s">&#39;Hello, &#39;</span><span class="p">,</span> <span class="n">html</span><span class="o">.</span><span class="n">a</span><span class="p">(</span><span class="n">href</span><span class="o">=</span><span class="s">&#39;/world&#39;</span><span class="p">)(</span><span class="s">&#39;World&#39;</span><span class="p">),</span> <span class="s">&#39;!&#39;</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="flaskext.htmlbuilder.HasAttr">
+<em class="property">class </em><tt class="descclassname">flaskext.htmlbuilder.</tt><tt class="descname">HasAttr</tt><a class="headerlink" href="#flaskext.htmlbuilder.HasAttr" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>html.has_attr</cite> checks whether a given key exists in the
+<cite>g.attrs</cite> dictionary and if so then it returns specified child elements.</p>
+<p>The following function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">meta_description</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;description&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">html</span><span class="o">.</span><span class="n">meta</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;description&#39;</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">g</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</pre></div>
+</div>
+<p>Is equivalent to the following:</p>
+<div class="highlight-python"><pre>def meta_description():
+    return html.has_attr('description)(
+        html.meta(name='description', content=Attr('description'))
+    )</pre>
+</div>
+<p>It is used usually in conjunction with <a class="reference internal" href="#flaskext.htmlbuilder.Attr" title="flaskext.htmlbuilder.Attr"><tt class="xref py py-class docutils literal"><span class="pre">Attr</span></tt></a>.</p>
+</dd></dl>
+
+</div>
 </div>
 <div class="section" id="rendering">
 <h3>Rendering<a class="headerlink" href="#rendering" title="Permalink to this headline">¶</a></h3>
@@ -525,7 +620,7 @@ alternative approach to defining template block inheritance.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="nd">@root_block</span><span class="p">(</span><span class="s">&#39;sidebar&#39;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">sidebar_base</span><span class="p">():</span>
     <span class="k">return</span> <span class="n">html</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s">&#39;sidebar&#39;</span><span class="p">)(</span>
-        <span class="n">g</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;sidebar_content&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="n">html</span><span class="o">.</span><span class="n">block</span><span class="p">(</span><span class="s">&#39;sidebar_content&#39;</span><span class="p">)</span>
     <span class="p">)</span>
 
 <span class="nd">@block</span><span class="p">(</span><span class="s">&#39;sidebar_content&#39;</span><span class="p">,</span> <span class="n">sidebar_base</span><span class="p">,</span> <span class="n">sidebar_first_view</span><span class="p">)</span>
@@ -540,7 +635,7 @@ alternative approach to defining template block inheritance.</p>
 <p>Is equivalent to the following:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">sidebar_base</span><span class="p">():</span>
     <span class="k">return</span> <span class="n">html</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s">&#39;sidebar&#39;</span><span class="p">)(</span>
-        <span class="n">g</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;sidebar_content&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="n">html</span><span class="o">.</span><span class="n">block</span><span class="p">(</span><span class="s">&#39;sidebar_content&#39;</span><span class="p">)</span>
     <span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">sidebar_first_content</span><span class="p">():</span>
@@ -578,6 +673,19 @@ in the documentation of <a class="reference internal" href="#flaskext.htmlbuilde
 <dd><p>When used with <a class="reference internal" href="#flaskext.htmlbuilder.Block" title="flaskext.htmlbuilder.Block"><tt class="xref py py-class docutils literal"><span class="pre">Block</span></tt></a> it plays the same role as the
 <cite>context_name</cite> parameter of the <a class="reference internal" href="#flaskext.htmlbuilder.block" title="flaskext.htmlbuilder.block"><tt class="xref py py-func docutils literal"><span class="pre">block()</span></tt></a> decorator. Check the
 documentation of <a class="reference internal" href="#flaskext.htmlbuilder.RootBlock" title="flaskext.htmlbuilder.RootBlock"><tt class="xref py py-class docutils literal"><span class="pre">RootBlock</span></tt></a> for more information.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="flaskext.htmlbuilder.Attr">
+<em class="property">class </em><tt class="descclassname">flaskext.htmlbuilder.</tt><tt class="descname">Attr</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#flaskext.htmlbuilder.Attr" title="Permalink to this definition">¶</a></dt>
+<dd><p>A shortcut class for accessing the <cite>g.attrs</cite> dictionary for populating
+HTML element attributes with data.</p>
+<p>The following two calls are equivalent:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">html</span><span class="o">.</span><span class="n">meta</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;description&#39;</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">Attr</span><span class="p">(</span><span class="s">&#39;description&#39;</span><span class="p">))</span>
+
+<span class="n">html</span><span class="o">.</span><span class="n">meta</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;description&#39;</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">g</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
