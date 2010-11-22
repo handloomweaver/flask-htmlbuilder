@@ -580,3 +580,42 @@ def test_attr_has_attr():
 </html>
 """
 
+def test_default_block():
+    app = Flask(__name__)
+    init_htmlbuilder(app)
+    
+    @app.route('/a')
+    def view_a():
+        return render_template()
+    
+    @app.route('/b')
+    def view_b():
+        html.block('title')('New Title')
+        return render_template()
+    
+    @root_block()
+    def site_root():
+        return html.title(
+            html.block('title')(
+                'Default Title'
+            )
+        )
+    
+    client = app.test_client()
+    result = client.get('/a')
+    assert result.data == """<title>
+  Default Title
+</title>
+"""
+    
+    result = client.get('/b')
+    assert result.data == """<title>
+  New Title
+</title>
+"""
+    
+    result = client.get('/a')
+    assert result.data == """<title>
+  Default Title
+</title>
+"""

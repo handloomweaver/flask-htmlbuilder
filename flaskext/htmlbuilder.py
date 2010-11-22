@@ -425,8 +425,7 @@ class BlockElement(BaseElement):
     """`html.block` is used for retreiving already populated blocks from the
     `g.blocks` dictionary.  It is a shortcut method for `g.blocks.get` with
     the small difference that it returns a block element on it's own like the
-    other `html` instance methods.  Additionally it has the ability to set
-    block content.
+    other `html` instance methods.
     
     The following call::
     
@@ -439,6 +438,10 @@ class BlockElement(BaseElement):
         >>> html.p(
         ...     html.block('content')
         ... )
+    
+    Additionally it has the ability to set block content if the block with the
+    same name is not already defined.  This is useful for definition of default
+    blocks.
     
     Setting block content is used that way::
     
@@ -453,6 +456,17 @@ class BlockElement(BaseElement):
         >>> g.blocks['content'] = html.join(
         ...     'Hello, ', html.a(href='/world')('World'), '!'
         ... )
+        
+    An example of specifying a default block:
+    
+        html.head(
+            html.title(
+                html.block('title')(
+                    'Default Title'
+                )
+            )
+        )
+    
     """
     __slots__ = ['_name']
     
@@ -462,7 +476,7 @@ class BlockElement(BaseElement):
     def __call__(self, *arguments):
         if self._name is None:
             self._name = arguments[0]
-        else:
+        elif not g.blocks.has_key(self._name):
             g.blocks[self._name] = arguments
         return self
     
